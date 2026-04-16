@@ -1,19 +1,27 @@
 # Stage 1: Build Stage
-FROM maven:3.8.1-openjdk-11 AS builder
+FROM maven:3.9.0-eclipse-temurin-11 AS builder
+
 WORKDIR /app
+
+# Copy pom.xml first for better caching
 COPY pom.xml .
+
+# Copy source code
 COPY src ./src
+
+# Build the application
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime Stage
-FROM openjdk:11-jre-slim
+FROM eclipse-temurin:11-jre-alpine
+
 WORKDIR /app
 
-# Copy JAR from builder
-COPY --from=builder /app/target/leave-system-1.0-SNAPSHOT.jar app.jar
+# Copy the JAR from builder stage
+COPY --from=builder /app/target/leave-system.jar app.jar
 
 # Expose port
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
